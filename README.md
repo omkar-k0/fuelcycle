@@ -2,7 +2,7 @@
 
 **Every fuel price change at French petrol stations, run through a data-quality gate, modelled in dbt on DuckDB, on one laptop.**
 
-Live demo: <!-- DEMO_URL --> · Data: prix-carburants.gouv.fr (Licence Ouverte 2.0)
+Live demo: https://fuelcycle-seven.vercel.app · Data: prix-carburants.gouv.fr (Licence Ouverte 2.0)
 
 ## Results (12 months, 1 Nov 2025 to 31 Oct 2026)
 
@@ -60,7 +60,7 @@ Live demo: <!-- DEMO_URL --> · Data: prix-carburants.gouv.fr (Licence Ouverte 2
    - **Found:** grouping peers by hour as well left many events with one or two peers, so the median was the event itself. Recall on injected outliers was 68.8% (`results/dq_eval_v1_hourly_peers.json`).
    - **Fix:** peers are now the whole day, and the rule abstains when there are fewer than 5 comparable stations. Recall rose to 97.5%; real flags settled at 7,050.
 4. **An hourly grid doesn't fit a daily market.**
-   - **Found:** 86% of station-fuel-days have exactly one price change. An hourly grid per city spilled about 2 GB per month on a 3 GB machine and added no information.
+   - **Found:** in November 2025, 86% of station-fuel-days had exactly one price change. An hourly grid per city spilled about 2 GB per month on a 3 GB machine and added no information.
    - **Fix:** area marts are daily. The hourly marts (`hourly_marts: true`) stay for markets like Germany, where stations reprice several times a day.
 5. **`approx_quantile` is not always cheaper.** One t-digest per group across ~300k groups ran out of memory, while exact quantiles spill to disk.
 
