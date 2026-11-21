@@ -1,0 +1,18 @@
+version: 2
+models:
+  - name: silver_price_events
+    description: Every fuel price event with its data-quality decision.
+    columns:
+      - name: event_id
+        tests: [unique, not_null]
+      - name: dq_status
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [accepted, flagged, quarantined]
+      - name: fuel
+        tests:
+          - accepted_values:
+              arguments:
+                values: [diesel, e5, e10]

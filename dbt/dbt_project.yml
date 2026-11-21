@@ -1,0 +1,50 @@
+name: fuelcycle
+version: "0.1.0"
+config-version: 2
+profile: fuelcycle
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  bronze_path: "{{ env_var('FUELCYCLE_BRONZE', '../data/bronze') }}"
+  # DQ gate thresholds (EUR per litre)
+  price_min: 0.80
+  price_max: 3.50
+  spike_pct: 0.08          # jump vs previous price that counts as a spike
+  spike_revert_minutes: 60 # spike must revert within this window to be flagged
+  outlier_abs: 0.30        # min distance from the regional median to flag
+  outlier_mad: 6           # or this many MADs, whichever is larger
+  outlier_min_peers: 5     # fewer comparable stations than this: the rule abstains
+  stale_days: 7            # a station-fuel with no event for this long is treated as closed
+  # incremental backfill: process one month per run, e.g. --vars '{month: "2026-01-01"}'
+  month: null
+  # gold marts
+  # Hourly marts (area-hour grid, intraday cycle, cheapest hour) are for markets where stations
+  # move prices several times a day (Germany). France moves about once a day: off by default there.
+  hourly_marts: false
+  city_min_stations: 10    # cities with fewer stations only appear in the region and country rollups
+  gold_include_flagged: false
+  cheapest_window_days: 28
+  cheapest_min_days: 21
+  cheapest_min_stations: 5
+  cheapest_min_confidence: 0.60
+  lf_window_days: 90
+  lf_radius_km: 2.0
+  lf_fuel: e10            # the most widely sold fuel in France; use e5 for Germany
+  lf_follow_minutes: 720  # France: stations move about once a day. Germany: 30 (moves several times a day)
+  lf_min_moves: 30
+
+models:
+  fuelcycle:
+    staging:
+      +materialized: view
+    silver:
+      +materialized: table
+    gold:
+      +materialized: table
+
+flags:
+  send_anonymous_usage_stats: false

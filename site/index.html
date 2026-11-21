@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fuelcycle · every fuel price change, one laptop</title>
+<meta name="description" content="A DuckDB + dbt pipeline over every fuel price change at French petrol stations: a data-quality gate scored by fault injection, daily price marts, leader/follower detection and a calibrated next-day forecast that only answers when it is sure.">
+<style>
+  :root {
+    --bg: #faf8f4; --ink: #1c1b19; --muted: #6b675f; --line: #e4dfd5; --card: #ffffff;
+    --teal: #0f766e; --orange: #c2410c; --soft-teal: #e6f2f0; --soft-orange: #fbeee6;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 var(--sans); }
+  main { max-width: 980px; margin: 0 auto; padding: 48px 24px 80px; }
+  h1 { font: 600 44px/1.1 var(--serif); margin: 8px 0 12px; letter-spacing: -0.01em; }
+  h2 { font: 600 26px/1.2 var(--serif); margin: 64px 0 8px; }
+  p.lead { font-size: 19px; color: var(--muted); max-width: 740px; margin: 0; }
+  .eyebrow { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--teal); font-weight: 600; }
+  .badge { display: inline-block; font-size: 12px; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--muted); text-decoration: none; }
+  .badge.warn { background: var(--soft-orange); color: var(--orange); border-color: #f3d3bf; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 32px 0 0; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+  .stat b { display: block; font: 600 26px/1.2 var(--serif); }
+  .stat span { font-size: 13px; color: var(--muted); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-top: 16px; overflow-x: auto; }
+  .note { font-size: 14px; color: var(--muted); max-width: 760px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td.note { white-space: normal; }
+  th { font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .lesson { border-left: 3px solid var(--teal); padding: 4px 0 4px 14px; margin: 14px 0; }
+  .lesson b { display: block; }
+  .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 14px; }
+  .flow div { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .flow i { color: var(--muted); font-style: normal; }
+  a { color: var(--teal); }
+  footer { margin-top: 72px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+  @media (max-width: 700px) { .stats { grid-template-columns: repeat(2, 1fr); } .grid2 { grid-template-columns: 1fr; } h1 { font-size: 34px; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">fuelcycle · data engineering case study</div>
+  <h1>Every fuel price change in France, on one laptop</h1>
+  <p class="lead">A DuckDB + dbt pipeline over a year of the French government's fuel price feed. Every event passes a data-quality gate that is scored by injecting known faults. Daily marts show prices by region and city and which stations lead. A next-day forecast answers "fill up today?" only when it is sure.</p>
+  <p style="margin-top:14px"><span id="label" class="badge"></span> <span id="period" class="badge"></span>
+     <a class="badge" href="https://github.com/omkar-k0/fuelcycle">Code on GitHub</a></p>
+
+  <div class="stats" id="stats"></div>
+
+  <h2>A year of prices</h2>
+  <p class="note">Daily national average (the price in force at 12:00 at every station), with the 10th to 90th percentile across stations for diesel.</p>
+  <div class="card" id="daily"></div>
+
+  <h2>When stations change prices</h2>
+  <p class="note">French stations change each fuel's price about once a day, mostly overnight and in the morning. Share of all E10 price changes by hour of day, and how many of them are rises.</p>
+  <div class="card" id="timing"></div>
+
+  <h2>Cheapest and most expensive cities</h2>
+  <p class="note">Diesel on the last day of data, cities with at least 10 stations reporting.</p>
+  <div class="grid2"><div class="card"><table id="cheap"></table></div><div class="card"><table id="dear"></table></div></div>
+
+  <h2>Who moves first</h2>
+  <p class="note">For every pair of stations within 2 km: when one changes its E10 price, does the neighbour move in the same direction within 12 hours, before the first one moves again? A <b>leader</b> is followed at least twice as often as it follows. Stations with no neighbour or fewer than 30 moves get no label.</p>
+  <div class="card" id="leaders"></div>
+
+  <h2>"Fill up today?" A forecast that knows when it's unsure</h2>
+  <p class="note">LightGBM quantile models predict tomorrow's price for France and 135 cities, per fuel. The 80% band is calibrated on the most recent held-out week. If the whole band sits above today's price the answer is <b>fill now</b>, if it sits below it's <b>wait</b>, otherwise <b>uncertain</b>. Rolling-origin backtest over the last 8 weeks, retrained every week.</p>
+  <div class="card" id="forecast"></div>
+  <div class="card"><table id="forecast-table"></table></div>
+  <p class="note" id="forecast-verdict"></p>
+
+  <h2>Data-quality gate</h2>
+  <p class="note">Every price event is <b>accepted</b>, <b>flagged</b> (kept, but not used by the marts) or <b>quarantined</b>, each with a reason code. A dbt test checks that bronze rows = silver rows, so nothing is dropped silently.</p>
+  <div class="card"><table id="reasons"></table></div>
+  <p class="note">Fault injection: known faults are written into copies of 14 real days, then the gate is scored on whether it catches them and gives the right reason. Rows the gate already flags on the untouched copy are real-world anomalies whose truth is unknown, so they're reported separately and not scored.</p>
+  <div class="card"><table id="dqeval"></table></div>
+
+  <h2>What the real data changed</h2>
+  <div class="card" id="lessons">
+    <div class="lesson"><b>DuckDB's UNPIVOT silently drops NULLs.</b>The bronze = silver reconciliation test failed on injected rows with an unreadable price. They were vanishing instead of being quarantined. Fixed with <code>INCLUDE NULLS</code>.</div>
+    <div class="lesson"><b>Motorway stations aren't outliers, they're expensive.</b>In the first full run, 81% of all flags (16,522 of 20,418) hit the 477 motorway stations. Each station is now compared with peers of the same type in its region.</div>
+    <div class="lesson"><b>Peer groups that are too small hide outliers.</b>Comparing within the same hour left many events with one or two peers, so the median was the event itself. Recall on injected outliers was 69%. Peers are now the whole day, and with fewer than 5 comparable stations the rule abstains: 97.5%.</div>
+    <div class="lesson"><b>An hourly grid doesn't fit a daily market.</b>86% of station-fuel-days have one price change. An hourly grid per city spilled about 2 GB per month on a 3 GB machine and added nothing. Area marts are daily; the hourly marts stay switched on for German data.</div>
+  </div>
+
+  <h2>How it works</h2>
+  <div class="flow card">
+    <div>Source adapter<br><i>French XML → canonical daily CSV</i></div>→
+    <div>Bronze<br><i>Parquet per day, checksums</i></div>→
+    <div>Silver (dbt)<br><i>events + DQ gate</i></div>→
+    <div>Gold (dbt)<br><i>area-day, change timing, leader/follower</i></div>→
+    <div>Forecast<br><i>quantiles + conformal band</i></div>
+  </div>
+  <p class="note">Silver is a dbt incremental model built one month at a time, so memory stays flat. The French feed is converted into the same daily CSV layout as Germany's Tankerkönig feed, so a second country is one adapter, not a new pipeline.</p>
+
+  <footer>
+    Data: prix-carburants.gouv.fr (Ministère de l'Économie), Licence Ouverte 2.0. Portfolio project, not affiliated with the data provider.
+    Built by <a href="https://omkarkhadilkar.dev">Omkar Khadilkar</a>.
+  </footer>
+</main>
+
+<script src="vendor/d3.min.js"></script>
+<script src="vendor/plot.umd.min.js"></script>
+<script type="module">
+const d = await (await fetch("data/fuelcycle.json")).json();
+const fmt = n => n == null ? "–" : Number(n).toLocaleString("en-US");
+const pct = (a, b, dp = 2) => b ? (100 * a / b).toFixed(dp) + "%" : "–";
+const FUEL = { e5: "SP95 (E5)", e10: "E10", diesel: "Diesel" };
+const COLORS = { e10: "#0f766e", diesel: "#c2410c", e5: "#8a857b" };
+const W = el => Math.max(320, el.clientWidth - 40);
+const nice = s => s.toLowerCase().replace(/(^|[\s-])\p{L}/gu, m => m.toUpperCase());
+
+const label = document.getElementById("label");
+label.textContent = d.label === "real" ? "Real data · France" : "Preview on a synthetic sample";
+if (d.label !== "real") label.classList.add("warn");
+const o = d.overview;
+document.getElementById("period").textContent = `${o.first_day.slice(0, 10)} to ${o.last_day.slice(0, 10)}`;
+const t = d.timings || {};
+const secs = (t.silver_seconds || 0) + (t.marts_and_tests_seconds || 0);
+document.getElementById("stats").innerHTML = [
+  [fmt(o.events), "price events"],
+  [fmt(o.stations), "stations"],
+  [pct(o.flagged + o.quarantined, o.events), "flagged or quarantined"],
+  [secs ? `${secs} s` : "–", "full rebuild, 4 cores, 3 GB RAM"],
+].map(([b, s]) => `<div class="stat"><b>${b}</b><span>${s}</span></div>`).join("");
+
+// daily prices
+const daily = d.daily_national.map(r => ({ ...r, t: new Date(r.day) }));
+const del = document.getElementById("daily");
+del.replaceChildren(Plot.plot({
+  width: W(del), height: 320, marginLeft: 48,
+  x: { type: "time", label: null }, y: { label: "EUR per litre", grid: true },
+  color: { legend: true, domain: ["diesel", "e10", "e5"], range: [COLORS.diesel, COLORS.e10, COLORS.e5], tickFormat: f => FUEL[f] },
+  marks: [
+    Plot.areaY(daily.filter(r => r.fuel === "diesel"), { x: "t", y1: "price_p10", y2: "price_p90", fill: COLORS.diesel, fillOpacity: 0.12 }),
+    Plot.lineY(daily, { x: "t", y: "price", stroke: "fuel", strokeWidth: 2, tip: true }),
+  ],
+}));
+
+// change timing
+const tm = d.change_timing.filter(r => r.fuel === "e10");
+const tel = document.getElementById("timing");
+tel.replaceChildren(Plot.plot({
+  width: W(tel), height: 260, marginLeft: 48,
+  x: { label: "hour of day", type: "band" }, y: { label: "share of E10 price changes", tickFormat: "%", grid: true },
+  marks: [
+    Plot.barY(tm, { x: "hour", y: "share_of_changes", fill: r => r.share_up >= 0.5 ? COLORS.diesel : COLORS.e10, tip: true,
+      title: r => `${r.hour}:00 · ${(r.share_of_changes * 100).toFixed(1)}% of changes · ${(r.share_up * 100).toFixed(0)}% are rises · avg ${r.avg_change_ct} ct` }),
+    Plot.ruleY([0]),
+  ],
+}));
+tel.insertAdjacentHTML("beforeend", `<p class="note">Orange: hours where most changes are rises. Teal: hours where most are cuts.</p>`);
+
+// cities
+const cd = d.cities_latest.filter(r => r.fuel === "diesel");
+const row = r => `<tr><td>${nice(r.city)}</td><td class="num">${r.price.toFixed(3)} €</td><td class="num">${r.n_stations}</td></tr>`;
+const head = h => `<tr><th>${h}</th><th class="num">Diesel</th><th class="num">Stations</th></tr>`;
+document.getElementById("cheap").innerHTML = head("Cheapest") + cd.slice(0, 8).map(row).join("");
+document.getElementById("dear").innerHTML = head("Most expensive") + cd.slice(-8).reverse().map(row).join("");
+
+// leaders
+const lb = d.leader_by_brand;
+const lel = document.getElementById("leaders");
+lel.replaceChildren(Plot.plot({
+  width: W(lel), height: 40 + 34 * lb.length, marginLeft: 150,
+  x: { label: "share of labelled stations", tickFormat: "%", domain: [0, 1] }, y: { label: null },
+  color: { legend: true, domain: ["leader", "mixed", "follower"], range: ["#0f766e", "#d9d4ca", "#c2410c"] },
+  marks: [Plot.barX(lb.flatMap(r => {
+      const n = r.leaders + r.mixed + r.followers;
+      return [{ g: r.brand, role: "leader", v: r.leaders / n, n }, { g: r.brand, role: "mixed", v: r.mixed / n, n }, { g: r.brand, role: "follower", v: r.followers / n, n }];
+    }), Plot.stackX({ x: "v", y: "g", fill: "role", order: ["leader", "mixed", "follower"], tip: true }))],
+}));
+lel.insertAdjacentHTML("beforeend", `<p class="note"><b>Read with care:</b> leaders and followers come out in about equal numbers, and the median lead share is 0.5. That pattern could arise by chance when neighbours all reprice overnight, so these labels need a shuffled-time baseline before anyone acts on them.</p><p class="note">${lb.map(r => `${r.brand}: ${fmt(r.leaders + r.mixed + r.followers)} labelled stations, median follow lag ${r.median_follow_lag_min ?? "–"} min`).join(" · ")}.</p>`);
+
+// forecast
+const fe = d.forecast_eval;
+if (fe && d.forecast_example) {
+  const ex = d.forecast_example.map(r => ({ ...r, t: new Date(r.day) }));
+  const fel = document.getElementById("forecast");
+  fel.replaceChildren(Plot.plot({
+    width: W(fel), height: 300, marginLeft: 48,
+    x: { type: "time", label: null }, y: { label: "E10, France, EUR per litre", grid: true },
+    marks: [
+      Plot.areaY(ex, { x: "t", y1: "p10", y2: "p90", fill: COLORS.e10, fillOpacity: 0.15 }),
+      Plot.lineY(ex, { x: "t", y: "p50", stroke: COLORS.e10, strokeWidth: 1.5 }),
+      Plot.lineY(ex, { x: "t", y: "actual", stroke: "#1c1b19", strokeWidth: 1.5 }),
+      Plot.dot(ex.filter(r => r.decision !== "uncertain"), { x: "t", y: "actual", r: 4,
+        fill: r => r.decision === "wait" ? COLORS.e10 : COLORS.diesel, tip: true, title: r => r.decision }),
+    ],
+  }));
+  fel.insertAdjacentHTML("beforeend", `<p class="note">Black: actual price. Teal line and band: forecast and its 80% band. Dots: days the model answered (orange = fill now, teal = wait).</p>`);
+  const dec = fe.decision, base = dec.base_rate_price_falls_next_day;
+  const pc = x => x == null ? "–" : Math.round(x * 100) + "%";
+  document.getElementById("forecast-table").innerHTML = `
+    <tr><th>Measure (${fmt(fe.test_rows)} area-fuel-days)</th><th class="num">Model</th><th class="num">Baseline</th></tr>
+    <tr><td>Error on tomorrow's price</td><td class="num">${fe.mae_ct.lgbm_p50} ct</td><td class="num">${fe.mae_ct.naive_tomorrow_equals_today} ct (tomorrow = today)</td></tr>
+    <tr><td>80% band contains tomorrow's price</td><td class="num">${pc(fe.interval_80.coverage)}</td><td class="num">${pc(fe.interval_80_raw.coverage)} before calibration</td></tr>
+    <tr><td>Answers given</td><td class="num">${pc(1 - (dec.share.uncertain || 0))}</td><td class="num">–</td></tr>
+    <tr><td>"Fill now" right (price did not fall)</td><td class="num">${pc(dec.fill_now_correct)}</td><td class="num">${pc(1 - base)} if you always fill now</td></tr>
+    <tr><td>"Wait" right (price fell)</td><td class="num">${pc(dec.wait_correct)}</td><td class="num">${pc(base)} if you always wait</td></tr>`;
+  document.getElementById("forecast-verdict").innerHTML =
+    `<b>Verdict:</b> day-to-day French prices are close to a random walk, so the point forecast is no better than "tomorrow = today". The calibrated band is honest, and "fill now" beats its base rate. "Wait" is wrong more often than right, so it shouldn't be shown to users. That conclusion came from this test window, so it still has to hold on the next months of data.`;
+}
+
+// DQ
+document.getElementById("reasons").innerHTML =
+  `<tr><th>Status</th><th>Reason</th><th class="num">Events</th><th class="num">Share of all events</th></tr>` +
+  (d.dq_reasons.length ? d.dq_reasons.map(r => `<tr><td>${r.dq_status}</td><td>${r.reason}</td><td class="num">${fmt(r.n)}</td><td class="num">${pct(r.n, o.events, 3)}</td></tr>`).join("")
+    : `<tr><td colspan="4">No events flagged or quarantined.</td></tr>`) +
+  `<tr><td>quarantined</td><td>any hard rule</td><td class="num">${fmt(o.quarantined)}</td><td class="num">${pct(o.quarantined, o.events, 3)}</td></tr>`;
+const q = d.dq_eval;
+if (q) {
+  document.getElementById("dqeval").innerHTML =
+    `<tr><th>Injected fault</th><th class="num">Injected</th><th class="num">Caught</th><th class="num">Right reason</th></tr>` +
+    q.per_fault.map(r => `<tr><td>${r.fault}</td><td class="num">${fmt(r.injected)}</td><td class="num">${(r.recall * 100).toFixed(1)}%</td><td class="num">${(r.right_reason * 100).toFixed(1)}%</td></tr>`).join("") +
+    `<tr><td><b>All faults</b></td><td class="num"><b>${fmt(q.totals.injected)}</b></td><td class="num"><b>${(q.totals.recall * 100).toFixed(1)}%</b></td><td></td></tr>
+     <tr><td colspan="4" class="note">Precision ${(q.totals.precision * 100).toFixed(1)}%: ${fmt(q.totals.false_alarms)} false alarms among ${fmt(q.totals.clean_events)} clean events. ${fmt(q.totals.background_rejected)} events were already flagged on the untouched copy; those are real anomalies with unknown truth and aren't scored.</td></tr>`;
+}
+</script>
+</body>
+</html>

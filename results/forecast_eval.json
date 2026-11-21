@@ -1,0 +1,39 @@
+{
+ "test_rows": 19679,
+ "series": 369,
+ "test_days": [
+  "2026-09-05",
+  "2026-10-30"
+ ],
+ "share_days_price_moved": 0.546,
+ "mae_ct": {
+  "lgbm_p50": 0.709,
+  "naive_tomorrow_equals_today": 0.712,
+  "naive_same_weekday_change": 1.204
+ },
+ "interval_80_raw": {
+  "coverage": 0.764
+ },
+ "interval_80": {
+  "coverage": 0.808,
+  "mean_width_ct": 2.28
+ },
+ "decision": {
+  "share": {
+   "uncertain": 0.966,
+   "fill now": 0.028,
+   "wait": 0.006
+  },
+  "answered_correct": 0.833,
+  "wait_correct": 0.443,
+  "wait_mean_saving_ct": 0.34,
+  "fill_now_correct": 0.92,
+  "fill_now_mean_avoided_rise_ct": 1.11,
+  "base_rate_price_falls_next_day": 0.283
+ },
+ "settings": {
+  "test_weeks": 8,
+  "fuels": "diesel,e10,e5",
+  "grain": "day (price at 12:00)"
+ }
+}

@@ -1,0 +1,11 @@
+fuelcycle:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('FUELCYCLE_DB', '../data/warehouse.duckdb') }}"
+      threads: 2
+      settings:
+        TimeZone: "Europe/Berlin"
+        memory_limit: "{{ env_var('FUELCYCLE_MEMORY', '6GB') }}"
+        preserve_insertion_order: false
