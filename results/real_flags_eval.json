@@ -1,0 +1,53 @@
+{
+ "sample": "100 of 7,050 real flags, random with fixed seed",
+ "primary_labels": "Omkar (Gemini drafted a first pass; every row checked by Omkar)",
+ "second_labels": "Claude Sonnet 5.5, blind: sheet only, no reasons, no primary labels",
+ "primary": {
+  "n": 100,
+  "error": 12,
+  "real": 86,
+  "unsure": 2,
+  "precision": 0.122
+ },
+ "second": {
+  "n": 100,
+  "error": 13,
+  "real": 86,
+  "unsure": 1,
+  "precision": 0.131
+ },
+ "by_reason_primary": {
+  "regional_outlier": {
+   "n": 97,
+   "error": 9,
+   "real": 86,
+   "unsure": 2,
+   "precision": 0.095
+  },
+  "spike_reversal": {
+   "n": 2,
+   "error": 2,
+   "real": 0,
+   "unsure": 0,
+   "precision": 1.0
+  },
+  "spike_reversal;regional_outlier": {
+   "n": 1,
+   "error": 1,
+   "real": 0,
+   "unsure": 0,
+   "precision": 1.0
+  }
+ },
+ "agreement": {
+  "same_label": 99,
+  "cohen_kappa": 0.959,
+  "disagreements": [
+   {
+    "item": 52,
+    "primary": "unsure",
+    "second": "error"
+   }
+  ]
+ }
+}
