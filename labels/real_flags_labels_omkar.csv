@@ -1,0 +1,101 @@
+item,label,note
+1,real,Stable at 2.699 across multiple days; Paris 16e station
+2,real,
+3,real,
+4,real,
+5,real,
+6,real,
+7,real,
+8,real,Consistent high motorway/border pricing (2.901 -> 2.873 -> 2.827)
+9,real,Monotonic Jan 1 tax/price step-up (1.879 -> 2.023 -> 2.083)
+10,real,Matches previous day 2.322; no next reading at Oct 31 dataset cutoff
+11,real,
+12,real,
+13,real,
+14,real,Multi-day 2.090 promotional cap price
+15,real,
+16,real,
+17,error,One-off drop (-0.24 EUR) reverted in 3 minutes
+18,real,
+19,real,
+20,error,Leading-digit typo: 1.390 instead of ~2.390 (-1.00 EUR)
+21,real,Multi-day 1.990 promotional cap price
+22,real,Multi-day 1.990 promotional cap price
+23,real,
+24,real,
+25,real,Multi-day 1.990 promotional cap price
+26,real,
+27,real,
+28,real,
+29,error,One-off drop (-0.32 EUR) reverted within 2.6 hours
+30,real,
+31,real,Smooth +0.028 step from prev 2.791; no next reading at Oct 31 cutoff
+32,real,Consistent high pricing across days (2.931 -> 2.913 -> 2.867)
+33,real,
+34,real,
+35,real,Multi-day 2.090 promotional cap price
+36,real,Multi-day 2.090 promotional price before step to 2.250
+37,error,Overnight one-off spike (+0.29 EUR) above prev/next/median
+38,real,
+39,real,
+40,error,Leading-digit typo: 1.244 instead of ~2.244 (-1.00 EUR)
+41,real,
+42,error,Leading-digit typo: 1.250 instead of 2.250 (-1.00 EUR)
+43,error,One-off drop (-0.43 EUR) reverted within 1 hour
+44,unsure,Temporary +0.10 EUR jump for 12h then back to 2.215; could be Sunday rate or glitch
+45,real,
+46,real,Multi-day 2.090 promotional price before step to 2.250
+47,real,
+48,real,
+49,real,Multi-day 1.990 promotional cap price
+50,real,
+51,real,
+52,unsure,Dropped to 1.990 for 7h then back to 2.250; possible promo or temporary glitch
+53,real,
+54,real,
+55,real,
+56,real,
+57,real,Multi-day 2.250 price across consecutive days
+58,real,
+59,real,
+60,real,
+61,real,
+62,real,
+63,real,
+64,real,Multi-day 2.090 promotional cap price
+65,real,
+66,error,One-off drop to 1.990 (-0.26 EUR) reverted in 19 seconds
+67,real,
+68,real,Multi-day 1.990 promotional cap price
+69,real,
+70,real,Island station (56360 Belle-Ile-en-Mer); matches next price 2.073
+71,real,
+72,real,
+73,real,
+74,real,Multi-day 2.090 promotional cap price
+75,real,
+76,real,
+77,real,
+78,error,Leading-digit typo: 1.233 instead of 2.233 (-1.00 EUR)
+79,error,"Leading-digit typo: 2.990 instead of 1.990 (+1.00 EUR), reverted in 5 min"
+80,real,Multi-day 1.990 promotional cap price
+81,real,
+82,real,
+83,real,
+84,real,
+85,real,
+86,real,
+87,real,Multi-day 1.990 promotional cap price
+88,error,One-off drop (-0.80 EUR) reverted in 30 minutes
+89,real,
+90,real,
+91,real,
+92,real,
+93,real,
+94,real,
+95,real,
+96,real,
+97,real,Steady multi-day upward trend (2.582 -> 2.672 -> 2.740)
+98,real,
+99,error,Leading-digit typo: 1.250 instead of 2.250 (-1.00 EUR)
+100,real,

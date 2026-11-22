@@ -30,7 +30,17 @@ Live demo: https://fuelcycle-seven.vercel.app · Data: prix-carburants.gouv.fr (
 - **Precision 99.7%:** 2 false alarms among 118,795 clean events.
 - **Not scored:** 264 events that the gate already flags on the untouched copy. They are real anomalies whose truth is unknown.
 - **What this measures:** the fault catalogue was written alongside the rules, so it shows the rules are implemented correctly and how few false alarms they raise on real data. It does not show that they find fault types nobody thought of.
-- **Next:** hand-label a sample of the 7,050 real flags to measure precision on real anomalies.
+- **On real data, most flags are genuine prices.** 100 of the 7,050 real flags, drawn at random, were labelled blind (`labels/`, `results/real_flags_eval.json`, `python3 scripts/score_real_flags.py`):
+
+| Labeller | Real error | Genuine price | Unsure | Precision |
+|---|---:|---:|---:|---:|
+| Omkar (Gemini drafted a first pass; every row checked by Omkar) | 12 | 86 | 2 | 12.2% |
+| Claude Sonnet 5.5, second check, blind | 13 | 86 | 1 | 13.1% |
+
+  - The two agree on 99 of 100 rows (Cohen's kappa 0.96). The one difference: item 52, unsure vs error.
+  - `regional_outlier` (97 of the 100) is right on 9 of 95 judged rows (9.5%). It mostly flags stations that are simply expensive: Paris, motorways, islands, price caps held for days.
+  - `spike_reversal` was right on all 3 of its rows. Three rows are too few to claim a rate.
+  - **What this means:** the gate catches planted errors (99.7%) but the regional rule raises far more alarms than real errors. Fixing it needs a station's own price history, not only its neighbours; not done yet.
 
 **Next-day forecast, rolling-origin backtest** (8 weeks, 5 Sep to 30 Oct 2026, 19,679 area-fuel-days, `results/forecast_eval.json`)
 

@@ -1,0 +1,101 @@
+item,label,note
+1,real,Paris 16; flat for days
+2,real,Small steps; rural but consistent
+3,real,Held then small step
+4,real,Flat several days
+5,real,Within cents of neighbours and median
+6,real,Paris; small step
+7,real,Step held a day; next same
+8,real,Station consistently high; small moves
+9,real,Gradual rise; station runs high
+10,real,Same as previous; no next
+11,real,Paris 16; flat
+12,real,Flat for days
+13,real,Tiny moves
+14,real,Flat; near median
+15,real,Small moves around same level
+16,real,Flat for days
+17,error,Drops 0.24 and reverts in 2 minutes
+18,real,Paris; small move
+19,real,Paris; small moves
+20,error,1.39 vs 2.35 before and 2.39 after
+21,real,Flat 1.990 held for days
+22,real,Flat 1.990 held for weeks
+23,real,Flat for days
+24,real,Flat for days
+25,real,Flat for days
+26,real,Paris 8; small moves
+27,real,Small intraday move
+28,real,Held for days; small moves
+29,error,1.343 vs 1.66 and 1.61 around it
+30,real,Paris; small moves
+31,real,Close to previous; high station
+32,real,Station consistently high
+33,real,Tiny moves
+34,real,Held for days
+35,real,Flat for days
+36,real,Held for days; near median
+37,error,Spike of 0.29 then back near 1.56
+38,real,Flat for days
+39,real,Flat for days
+40,error,1.244 vs 2.23 before and 2.25 after
+41,real,Station consistently high; gradual
+42,error,1.250 vs 2.235 before and 2.250 after
+43,error,Drops 0.43 and reverts within an hour
+44,unsure,+0.10 for 12 hours then back; could be real
+45,real,Flat for days
+46,real,Held for 12 days
+47,real,Flat for days
+48,real,Small moves
+49,real,Flat 1.990 held
+50,real,Small step
+51,real,Near median; small moves
+52,error,Drops 0.26 and reverts in 7 hours
+53,real,Small moves
+54,real,Small moves
+55,real,Flat
+56,real,Near median; tiny moves
+57,real,Flat for days
+58,real,Tiny moves
+59,real,Flat for days
+60,real,Small moves
+61,real,Paris; flat
+62,real,Paris; flat
+63,real,Paris; step held
+64,real,Flat for days
+65,real,Tiny moves
+66,error,1.990 reverts to 2.250 within 19 seconds
+67,real,Flat for days
+68,real,Flat for days
+69,real,Small moves
+70,real,Flat for weeks; high vs median but stable
+71,real,Small moves
+72,real,Paris; small moves
+73,real,Small moves
+74,real,Flat for days
+75,real,Flat for days
+76,real,Small moves
+77,real,Flat for days
+78,error,1.233 vs 2.233 before and 2.250 after
+79,error,2.990 spike reverts to 2.190 in 5 minutes
+80,real,Flat for days
+81,real,Step held about a week
+82,real,Flat for days
+83,real,Flat for days
+84,real,Flat for days
+85,real,Paris; small moves
+86,real,Flat for days
+87,real,Flat for days
+88,error,1.204 vs 1.999 before and 2.004 after
+89,real,Small moves; high station
+90,real,Flat for days
+91,real,Tiny moves
+92,real,Small moves
+93,real,Paris; small moves
+94,real,Small step then back
+95,real,Held a day; step down after
+96,real,Tiny move
+97,real,Moves around 2.6-2.7 trend
+98,real,Paris; small moves
+99,error,1.250 vs 2.090 before and 2.250 after
+100,real,Paris; small moves
